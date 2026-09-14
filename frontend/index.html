@@ -12,8 +12,8 @@
             margin: 0;
             padding: 0;
         }
-        /* Pantalla de Acceso Inteligente */
-        #auth-screen {
+        /* Pantallas de Acceso y Recuperación */
+        .auth-screen {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -128,10 +128,20 @@
         button.action-btn:hover {
             background-color: #d97706;
         }
-        #mensaje {
+        .link-btn {
+            background: none;
+            border: none;
+            color: #38bdf8;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            text-decoration: underline;
+        }
+        #mensaje, #mensaje-pin {
             margin-top: 15px;
             text-align: center;
             font-weight: bold;
+            font-size: 0.9rem;
         }
         /* Tabla de Administración */
         table {
@@ -172,22 +182,33 @@
 </head>
 <body>
 
-    <!-- PANTALLA DE ACCESO INTELIGENTE -->
-    <div id="auth-screen">
+    <!-- PANTALLA DE ACCESO -->
+    <div id="auth-screen" class="auth-screen">
         <div class="auth-card">
             <h2>Acceso a Torneos</h2>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Ingresa como público o introduce tu código de administrador.</p>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Entra como público dejando el código vacío, o introduce tu PIN de administrador.</p>
             <form id="formAuth">
                 <input type="password" id="codigoAcceso" placeholder="Código (Opcional para público)" autocomplete="off">
                 <button type="submit" class="action-btn">Ingresar</button>
             </form>
+            <button class="link-btn" onclick="mostrarPantallaRecuperacion()">¿Olvidaste tu código?</button>
             <div id="auth-error" style="color: #f87171; margin-top: 10px; font-size: 0.85rem;"></div>
         </div>
     </div>
 
-    <!-- APLICACIÓN PRINCIPAL (Oculta hasta definir acceso) -->
+    <!-- PANTALLA DE RECUPERACIÓN DE CONTRASEÑA -->
+    <div id="recovery-screen" class="auth-screen oculto">
+        <div class="auth-card">
+            <h2>Recuperar Código</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Te enviaremos tu código de administrador actual a tu correo de Gmail registrado.</p>
+            <button onclick="solicitudRecuperacion()" class="action-btn">Enviar Código a mi Gmail</button>
+            <button class="link-btn" onclick="volverAlLogin()">← Volver al Acceso</button>
+            <div id="recovery-mensaje" style="margin-top: 15px; font-size: 0.85rem;"></div>
+        </div>
+    </div>
+
+    <!-- APLICACIÓN PRINCIPAL -->
     <div id="app-content" class="oculto">
-        <!-- Barra Superior -->
         <header>
             <button class="menu-btn" onclick="abrirMenu()">☰</button>
             <h1 id="titulo-header">Torneos Free Fire</h1>
@@ -198,6 +219,7 @@
             <a href="javascript:void(0)" class="close-btn" onclick="cerrarMenu()">&times;</a>
             <a onclick="mostrarSeccion('registro')">🎮 Registro de Jugador</a>
             <a id="menu-admin-link" class="oculto" onclick="mostrarSeccion('admin'); cargarUsuariosAdmin();">🛡️ Panel Administrador</a>
+            <a id="menu-cambiar-pin" class="oculto" onclick="mostrarSeccion('cambiar-pin')">🔑 Cambiar mi Código</a>
             <a onclick="cerrarSesion()" style="color: #f87171; margin-top: 20px;">🚪 Salir / Cambiar Modo</a>
         </div>
 
@@ -229,56 +251,134 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="tablaUsuarios">
-                            <!-- Se llena con JS -->
-                        </tbody>
+                        <tbody id="tablaUsuarios"></tbody>
                     </table>
                 </div>
+            </div>
+
+            <!-- SECCIÓN 3: Cambiar Código de Administrador -->
+            <div id="seccion-cambiar-pin" class="card oculto">
+                <h2>Cambiar Código de Administrador</h2>
+                <form id="formCambiarPin">
+                    <input type="password" id="pinActual" placeholder="Código actual" required>
+                    <input type="password" id="nuevoPin" placeholder="Nuevo código" required>
+                    <button type="submit" class="action-btn">Actualizar Código</button>
+                </form>
+                <div id="mensaje-pin"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // CÓDIGO SECRETO DE ADMINISTRADOR (Puedes cambiarlo por el que prefieras)
-        const ADMIN_PIN = "admin123";
-
-        const formAuth = document.getElementById('formAuth');
-        const codigoInput = document.getElementById('codigoAcceso');
-        const authError = document.getElementById('auth-error');
         const authScreen = document.getElementById('auth-screen');
+        const recoveryScreen = document.getElementById('recovery-screen');
         const appContent = document.getElementById('app-content');
         const menuAdminLink = document.getElementById('menu-admin-link');
+        const menuCambiarPin = document.getElementById('menu-cambiar-pin');
         const tituloHeader = document.getElementById('titulo-header');
 
-        // Lógica de detección de rol al ingresar
-        formAuth.addEventListener('submit', (e) => {
+        // Lógica de Login validada contra el Servidor
+        document.getElementById('formAuth').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const codigo = codigoInput.value.trim();
+            const codigo = document.getElementById('codigoAcceso').value.trim();
 
             if (codigo === "") {
                 // Es Usuario Público
                 authScreen.classList.add('oculto');
                 appContent.classList.remove('oculto');
                 menuAdminLink.classList.add('oculto');
+                menuCambiarPin.classList.add('oculto');
                 tituloHeader.textContent = "Torneos Free Fire - Zona de Jugadores";
                 mostrarSeccion('registro');
-            } else if (codigo === ADMIN_PIN) {
-                // Es Administrador
-                authScreen.classList.add('oculto');
-                appContent.classList.remove('oculto');
-                menuAdminLink.classList.remove('oculto');
-                tituloHeader.textContent = "Torneos Free Fire - Panel Admin 🛡️";
-                mostrarSeccion('admin');
-                cargarUsuariosAdmin();
-            } else {
-                // Código inválido
-                authError.textContent = "Código incorrecto. Déjalo en blanco para entrar como público.";
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/login-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    authScreen.classList.add('oculto');
+                    appContent.classList.remove('oculto');
+                    menuAdminLink.classList.remove('oculto');
+                    menuCambiarPin.classList.remove('oculto');
+                    tituloHeader.textContent = "Torneos Free Fire - Panel Admin 🛡️";
+                    mostrarSeccion('admin');
+                    cargarUsuariosAdmin();
+                } else {
+                    document.getElementById('auth-error').textContent = "Código incorrecto. Déjalo en blanco para entrar como público.";
+                }
+            } catch (err) {
+                document.getElementById('auth-error').textContent = "Error de conexión con el servidor.";
+            }
+        });
+
+        function mostrarPantallaRecuperacion() {
+            authScreen.classList.add('oculto');
+            recoveryScreen.classList.remove('oculto');
+        }
+
+        function volverAlLogin() {
+            recoveryScreen.classList.add('oculto');
+            authScreen.classList.remove('oculto');
+        }
+
+        async function solicitudRecuperacion() {
+            const mensajeRec = document.getElementById('recovery-mensaje');
+            mensajeRec.style.color = '#38bdf8';
+            mensajeRec.textContent = "Enviando correo...";
+
+            try {
+                const res = await fetch('/api/admin/recuperar-pin', { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) {
+                    mensajeRec.style.color = '#4ade80';
+                    mensajeRec.textContent = data.mensaje;
+                } else {
+                    mensajeRec.style.color = '#f87171';
+                    mensajeRec.textContent = data.error || "Error al enviar el correo.";
+                }
+            } catch (err) {
+                mensajeRec.style.color = '#f87171';
+                mensajeRec.textContent = "Error de conexión con el servidor.";
+            }
+        }
+
+        // Cambio de PIN desde el panel
+        document.getElementById('formCambiarPin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pinActual = document.getElementById('pinActual').value;
+            const nuevoPin = document.getElementById('nuevoPin').value;
+            const msgPin = document.getElementById('mensaje-pin');
+
+            try {
+                const res = await fetch('/api/admin/cambiar-pin', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pinActual, nuevoPin })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    msgPin.style.color = '#4ade80';
+                    msgPin.textContent = data.mensaje;
+                    document.getElementById('formCambiarPin').reset();
+                } else {
+                    msgPin.style.color = '#f87171';
+                    msgPin.textContent = data.error;
+                }
+            } catch (err) {
+                msgPin.style.color = '#f87171';
+                msgPin.textContent = "Error de conexión.";
             }
         });
 
         function cerrarSesion() {
-            codigoInput.value = "";
-            authError.textContent = "";
+            document.getElementById('codigoAcceso').value = "";
+            document.getElementById('auth-error').textContent = "";
             appContent.classList.add('oculto');
             authScreen.classList.remove('oculto');
             cerrarMenu();
@@ -294,11 +394,12 @@
         function mostrarSeccion(seccion) {
             document.getElementById("seccion-registro").classList.add("oculto");
             document.getElementById("seccion-admin").classList.add("oculto");
+            document.getElementById("seccion-cambiar-pin").classList.add("oculto");
             document.getElementById("seccion-" + seccion).classList.remove("oculto");
             cerrarMenu();
         }
 
-        // Registro de usuario
+        // Registro de usuario público
         const form = document.getElementById('formRegistro');
         const mensajeDiv = document.getElementById('mensaje');
 
