@@ -3,13 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneos Free Fire - Panel</title>
+    <title>Plataforma de Torneos Free Fire</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; padding: 20px; }
-        .card { background: #1e293b; padding: 20px; margin-bottom: 15px; border-radius: 8px; }
-        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-        button { background: #f59e0b; color: #000; font-weight: bold; border: none; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #d97706; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h2 {
+            font-size: 1.2rem;
+            margin-top: 0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            background-color: #f59e0b;
+            color: #000;
+            font-weight: bold;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #d97706;
+        }
+        #mensaje {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -18,16 +64,24 @@
 
     <div class="card">
         <h2>Registro de Jugador</h2>
-        <input type="text" id="nombre" placeholder="Nombre completo">
-        <input type="text" id="whatsapp" placeholder="Número de WhatsApp">
-        <input type="text" id="freefire_id" placeholder="ID de Free Fire (Ej. 12345678)">
-        <input type="text" id="nickname" placeholder="Nick en el juego">
-        <button onclick="registrarJugador()">Registrarse</button>
+        <form id="formRegistro">
+            <input type="text" id="nombre" placeholder="Nombre completo" required>
+            <input type="text" id="whatsapp" placeholder="Número de WhatsApp" required>
+            <input type="text" id="freefire_id" placeholder="ID de Free Fire (Ej. 12345678)" required>
+            <input type="text" id="nickname" placeholder="Nick en el juego" required>
+            <button type="submit">Registrarse</button>
+        </form>
+        <div id="mensaje"></div>
     </div>
 
     <script>
-        async function registrarJugador() {
-            const data = {
+        const form = document.getElementById('formRegistro');
+        const mensajeDiv = document.getElementById('mensaje');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const datos = {
                 nombre: document.getElementById('nombre').value,
                 whatsapp: document.getElementById('whatsapp').value,
                 freefire_id: document.getElementById('freefire_id').value,
@@ -35,18 +89,28 @@
             };
 
             try {
-                const response = await fetch('/api/registrar', {
+                const respuesta = await fetch('/api/registrar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(datos)
                 });
 
-                const resultado = await response.json();
-                alert(resultado.mensaje || resultado.error);
+                const resultado = await respuesta.json();
+
+                if (respuesta.ok) {
+                    mensajeDiv.style.color = '#4ade80';
+                    mensajeDiv.textContent = `${resultado.mensaje} ¡Bienvenido, ${resultado.usuario.nickname}!`;
+                    form.reset();
+                } else {
+                    mensajeDiv.style.color = '#f87171';
+                    mensajeDiv.textContent = resultado.error || 'Ocurrió un error en el registro.';
+                }
             } catch (error) {
-                alert('Ocurrió un error al conectar con el servidor.');
+                mensajeDiv.style.color = '#f87171';
+                mensajeDiv.textContent = 'Error de conexión con el servidor.';
             }
-        }
+        });
     </script>
+
 </body>
 </html>
