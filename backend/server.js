@@ -1,6 +1,10 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 app.use(express.json());
+
+// Servir la interfaz gráfica (frontend) desde la carpeta correspondiente
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Simulación de base de datos en memoria (puedes reemplazarlo luego por PostgreSQL o MongoDB)
 let usuarios = [];
