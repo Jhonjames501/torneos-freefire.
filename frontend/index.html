@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torneos Free Fire - Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; margin-bottom: 15px; border-radius: 8px; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #f59e0b; color: #000; font-weight: bold; border: none; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #d97706; }
+    </style>
+</head>
+<body>
+
+    <h1>Plataforma de Torneos Free Fire</h1>
+
+    <div class="card">
+        <h2>Registro de Jugador</h2>
+        <input type="text" id="nombre" placeholder="Nombre completo">
+        <input type="text" id="whatsapp" placeholder="Número de WhatsApp">
+        <input type="text" id="freefire_id" placeholder="ID de Free Fire (Ej. 12345678)">
+        <input type="text" id="nickname" placeholder="Nick en el juego">
+        <button onclick="registrarJugador()">Registrarse</button>
+    </div>
+
+    <script>
+        async function registrarJugador() {
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                whatsapp: document.getElementById('whatsapp').value,
+                freefire_id: document.getElementById('freefire_id').value,
+                nickname: document.getElementById('nickname').value
+            };
+
+            try {
+                const response = await fetch('/api/registrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const resultado = await response.json();
+                alert(resultado.mensaje || resultado.error);
+            } catch (error) {
+                alert('Ocurrió un error al conectar con el servidor.');
+            }
+        }
+    </script>
+</body>
+</html>
