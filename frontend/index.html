@@ -12,6 +12,23 @@
             margin: 0;
             padding: 0;
         }
+        /* Pantalla de Acceso Inteligente */
+        #auth-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+        }
+        .auth-card {
+            background-color: #1e293b;
+            padding: 25px;
+            border-radius: 8px;
+            max-width: 350px;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            text-align: center;
+        }
         /* Barra Superior */
         header {
             background-color: #1e293b;
@@ -149,62 +166,124 @@
             cursor: pointer;
         }
         .oculto {
-            display: none;
+            display: none !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- Barra Superior -->
-    <header>
-        <button class="menu-btn" onclick="abrirMenu()">☰</button>
-        <h1>Torneos Free Fire</h1>
-    </header>
-
-    <!-- Menú Lateral -->
-    <div id="mySidebar" class="sidebar">
-        <a href="javascript:void(0)" class="close-btn" onclick="cerrarMenu()">&times;</a>
-        <a onclick="mostrarSeccion('registro')">🎮 Registro de Jugador</a>
-        <a onclick="mostrarSeccion('admin'); cargarUsuariosAdmin();">🛡️ Panel Administrador</a>
+    <!-- PANTALLA DE ACCESO INTELIGENTE -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2>Acceso a Torneos</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px;">Ingresa como público o introduce tu código de administrador.</p>
+            <form id="formAuth">
+                <input type="password" id="codigoAcceso" placeholder="Código (Opcional para público)" autocomplete="off">
+                <button type="submit" class="action-btn">Ingresar</button>
+            </form>
+            <div id="auth-error" style="color: #f87171; margin-top: 10px; font-size: 0.85rem;"></div>
+        </div>
     </div>
 
-    <div class="container">
-        <!-- SECCIÓN 1: Registro -->
-        <div id="seccion-registro" class="card">
-            <h2>Registro de Jugador</h2>
-            <form id="formRegistro">
-                <input type="text" id="nombre" placeholder="Nombre completo" required>
-                <input type="text" id="whatsapp" placeholder="Número de WhatsApp" required>
-                <input type="text" id="freefire_id" placeholder="ID de Free Fire (Ej. 12345678)" required>
-                <input type="text" id="nickname" placeholder="Nick en el juego" required>
-                <button type="submit" class="action-btn">Registrarse</button>
-            </form>
-            <div id="mensaje"></div>
+    <!-- APLICACIÓN PRINCIPAL (Oculta hasta definir acceso) -->
+    <div id="app-content" class="oculto">
+        <!-- Barra Superior -->
+        <header>
+            <button class="menu-btn" onclick="abrirMenu()">☰</button>
+            <h1 id="titulo-header">Torneos Free Fire</h1>
+        </header>
+
+        <!-- Menú Lateral -->
+        <div id="mySidebar" class="sidebar">
+            <a href="javascript:void(0)" class="close-btn" onclick="cerrarMenu()">&times;</a>
+            <a onclick="mostrarSeccion('registro')">🎮 Registro de Jugador</a>
+            <a id="menu-admin-link" class="oculto" onclick="mostrarSeccion('admin'); cargarUsuariosAdmin();">🛡️ Panel Administrador</a>
+            <a onclick="cerrarSesion()" style="color: #f87171; margin-top: 20px;">🚪 Salir / Cambiar Modo</a>
         </div>
 
-        <!-- SECCIÓN 2: Panel Admin -->
-        <div id="seccion-admin" class="card oculto">
-            <h2>Panel de Administración (Registros)</h2>
-            <p style="font-size: 0.85rem; color: #94a3b8;">Lista de jugadores inscritos en el sistema.</p>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nick</th>
-                            <th>ID FF</th>
-                            <th>WhatsApp</th>
-                            <th>Acciones</th>
-                        </tr>
-                    <</thead>
-                    <tbody id="tablaUsuarios">
-                        <!-- Se llena con JS -->
-                    </tbody>
-                </table>
+        <div class="container">
+            <!-- SECCIÓN 1: Registro -->
+            <div id="seccion-registro" class="card">
+                <h2>Registro de Jugador</h2>
+                <form id="formRegistro">
+                    <input type="text" id="nombre" placeholder="Nombre completo" required>
+                    <input type="text" id="whatsapp" placeholder="Número de WhatsApp" required>
+                    <input type="text" id="freefire_id" placeholder="ID de Free Fire (Ej. 12345678)" required>
+                    <input type="text" id="nickname" placeholder="Nick en el juego" required>
+                    <button type="submit" class="action-btn">Registrarse</button>
+                </form>
+                <div id="mensaje"></div>
+            </div>
+
+            <!-- SECCIÓN 2: Panel Admin -->
+            <div id="seccion-admin" class="card oculto">
+                <h2>Panel de Administración (Registros)</h2>
+                <p style="font-size: 0.85rem; color: #94a3b8;">Lista de jugadores inscritos en el sistema.</p>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nick</th>
+                                <th>ID FF</th>
+                                <th>WhatsApp</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuarios">
+                            <!-- Se llena con JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // CÓDIGO SECRETO DE ADMINISTRADOR (Puedes cambiarlo por el que prefieras)
+        const ADMIN_PIN = "admin123";
+
+        const formAuth = document.getElementById('formAuth');
+        const codigoInput = document.getElementById('codigoAcceso');
+        const authError = document.getElementById('auth-error');
+        const authScreen = document.getElementById('auth-screen');
+        const appContent = document.getElementById('app-content');
+        const menuAdminLink = document.getElementById('menu-admin-link');
+        const tituloHeader = document.getElementById('titulo-header');
+
+        // Lógica de detección de rol al ingresar
+        formAuth.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const codigo = codigoInput.value.trim();
+
+            if (codigo === "") {
+                // Es Usuario Público
+                authScreen.classList.add('oculto');
+                appContent.classList.remove('oculto');
+                menuAdminLink.classList.add('oculto');
+                tituloHeader.textContent = "Torneos Free Fire - Zona de Jugadores";
+                mostrarSeccion('registro');
+            } else if (codigo === ADMIN_PIN) {
+                // Es Administrador
+                authScreen.classList.add('oculto');
+                appContent.classList.remove('oculto');
+                menuAdminLink.classList.remove('oculto');
+                tituloHeader.textContent = "Torneos Free Fire - Panel Admin 🛡️";
+                mostrarSeccion('admin');
+                cargarUsuariosAdmin();
+            } else {
+                // Código inválido
+                authError.textContent = "Código incorrecto. Déjalo en blanco para entrar como público.";
+            }
+        });
+
+        function cerrarSesion() {
+            codigoInput.value = "";
+            authError.textContent = "";
+            appContent.classList.add('oculto');
+            authScreen.classList.remove('oculto');
+            cerrarMenu();
+        }
+
         // Funciones del Menú Lateral
         function abrirMenu() {
             document.getElementById("mySidebar").style.width = "250px";
